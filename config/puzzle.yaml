@@ -1,0 +1,60 @@
+sensePara:
+    rs:
+        -   id: "0"
+            width: 1280
+            height: 720
+
+planPara:
+    work space:
+        x: 0
+        y: 0
+        w: 0
+        h: 0
+    sucker_coord: 
+        - [-42, 62.7, 99]
+        - [-42, 62.7, 99]
+        - [-42, 62.7, 99]
+        - [-42, 62.7, 99]
+    camera_coord: [-3.203, -189.245, -534]
+    sample:
+    - puzzle_model/0.jpg
+    - puzzle_model/1.jpg
+    - puzzle_model/2.jpg
+    - puzzle_model/3.jpg
+    - puzzle_model/4.jpg
+    - puzzle_model/5.jpg
+    - puzzle_model/6.jpg
+    - puzzle_model/7.jpg
+    - puzzle_model/8.jpg
+    - puzzle_model/9.jpg
+    - puzzle_model/10.jpg
+    - puzzle_model/11.jpg
+    - puzzle_model/12.jpg
+    - puzzle_model/13.jpg
+    - puzzle_model/14.jpg
+    - puzzle_model/15.jpg
+    - puzzle_model/16.jpg
+    - puzzle_model/17.jpg
+
+actPara:
+    arm: 
+        ip: "192.168.0.1"
+        port: 502
+        operationMode: 1
+        accel: 15
+        feedRate: 10
+        ptpSpeed: 10
+        linSpeed: 1200
+        baseNum: 0
+        base: [0, 0, 0, 0, 0, 0]
+        toolNum: 0
+        tool: [0, 0, 0, 0, 0, 0]
+    serial controller: 
+        port: "/dev/ttyUSB0"
+        sucker: 
+            - pin: 47
+            - pin: 49
+            - pin: 51
+            - pin: 53
+
+setting file: puzzle.yaml

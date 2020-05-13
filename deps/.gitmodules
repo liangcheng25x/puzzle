@@ -1,0 +1,12 @@
+[submodule "hiwin_lib"]
+	path = hiwin_lib
+	url = git@gitlab.ical.tw:jamesljlster/hiwin_lib.git
+[submodule "serial"]
+	path = serial
+	url = git@gitlab.ical.tw:b1065144/serial.git
+[submodule "serialcontroller"]
+	path = serialcontroller
+	url = git@gitlab.ical.tw:b1065141/serialcontroller.git
+[submodule "realsense_lib"]
+	path = realsense_lib
+	url = git@gitlab.ical.tw:b1065144/realsense_lib.git
