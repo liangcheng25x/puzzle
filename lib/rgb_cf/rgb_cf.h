@@ -1,20 +1,6 @@
 #include <iostream>
-#include <yaml-cpp/yaml.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
-
-namespace YAML
-{
-    template<>
-    struct convert<cv::Mat>
-    {
-        static bool decode(const Node& node, cv::Mat& img)
-        {
-            img = cv::imread( node.as<std::string>());
-            return true;
-        }
-    };
-}
 
 typedef struct Similarity_List
 {
@@ -28,7 +14,7 @@ public:
     RGB_CF();
     ~RGB_CF();
 
-    void init(std::string file_name);
+    void init(std::vector<cv::Mat> samples);
 
     std::vector<similarity_list> classify(cv::Mat img);
 

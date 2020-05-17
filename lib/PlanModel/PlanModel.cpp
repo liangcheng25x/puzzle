@@ -35,6 +35,9 @@ PlanModel::PlanModel(const YAML::Node& plan)
         s.img = plan["sample"][i].as<Mat>();
         sample.push_back(s);
     }
+    
+    //image process
+    thres = plan["threshold"].as<int>();
 }
 
 PlanModel::~PlanModel()

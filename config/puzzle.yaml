@@ -10,6 +10,7 @@ planPara:
         y: 0
         w: 0
         h: 0
+    threshold: 200
     sucker_coord: 
         - [-42, 62.7, 99]
         - [-42, 62.7, 99]

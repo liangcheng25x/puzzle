@@ -76,6 +76,7 @@ private:
     std::array<double, 3> camera_coord;
     
     //puzzle
+    int thres;
     std::vector<specimen> sample;
     std::vector<fragment> fragments;
 
