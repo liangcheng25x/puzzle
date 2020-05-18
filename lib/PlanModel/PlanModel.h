@@ -29,7 +29,6 @@ typedef struct
 typedef struct
 {
     cv::Mat img;
-    int cls;
     double xyz;
     bool linked;
 }specimen;
@@ -57,7 +56,7 @@ public:
     PlanModel(const YAML::Node& plan);
     ~PlanModel();
 
-    void run(SenseData* senseData, PlanData* palnData);
+    void run(SenseData* senseData, PlanData* palnData, ActData* actData);
     bool is_finish();
 
 private:
@@ -81,10 +80,17 @@ private:
     std::vector<fragment> fragments;
 
     //master fsm
-    void state_init(SenseData* senseData, PlanData* planData);
-    void state_identify(SenseData* senseData, PlanData* planData);
-    void state_piece(SenseData* senseData, PlanData* planData);
-    void state_finish(SenseData* senseData, PlanData* planData);
+    void state_init(SenseData* senseData, PlanData* planData, ActData* actData);
+    void state_identify(SenseData* senseData, PlanData* planData, ActData* actData);
+    void state_piece(SenseData* senseData, PlanData* planData, ActData* actData);
+    void state_finish(SenseData* senseData, PlanData* planData, ActData* actData);
+    
+    //piece fsm
+    void piece_trace(SenseData* senseData, PlanData* planData, ActData* actData);
+    void piece_catch(SenseData* senseData, PlanData* planData, ActData* actData);
+    void piece_go_put(SenseData* senseData, PlanData* planData, ActData* actData);
+    void piece_put(SenseData* senseData, PlanData* planData, ActData* actData);
+    void piece_finish(SenseData* senseData, PlanData* planData, ActData* actData);
 };
 
 #endif

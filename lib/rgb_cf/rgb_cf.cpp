@@ -26,7 +26,7 @@ void RGB_CF::init(std::vector<cv::Mat> samples)
     sample.resize(samples.size());
     for(size_t i = 0; i < samples.size(); i++)
     {
-        samples.copyTo(sample[i])
+        samples[i].copyTo(sample[i]);
     }
     rgb_sample.resize(sample.size());
     hist.resize(sample.size());

@@ -1,7 +1,6 @@
 #include "SPAData.h"
 #include "ActModel.h"
 #include "HiwinSDK.h"
-#include "sucker.h"
 
 ActModel::ActModel(const YAML::Node& act)
 {

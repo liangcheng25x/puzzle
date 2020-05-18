@@ -45,32 +45,32 @@ PlanModel::~PlanModel()
     cout << "plan model destruct" << endl;
 }
 
-void PlanModel::run(SenseData* senseData, PlanData* planData)
+void PlanModel::run(SenseData* senseData, PlanData* planData, ActData* actData)
 {
     switch(master)
     {
         case MasterState::INIT:
             cout << "master init" << endl;
 
-            state_init(senseData, planData);
+            state_init(senseData, planData, actData);
             break;
 
         case MasterState::IDENTIFY:
             cout << "master identify" << endl;
 
-            state_identify(senseData, planData);
+            state_identify(senseData, planData, actData);
             break;
 
         case MasterState::PIECE:
             cout << "master piece" << endl;
 
-            state_piece(senseData, planData);
+            state_piece(senseData, planData, actData);
             break;
 
         case MasterState::FINISH:
             cout << "master finish" << endl;
 
-            state_finish(senseData, planData);
+            state_finish(senseData, planData, actData);
             break;
     }
 }

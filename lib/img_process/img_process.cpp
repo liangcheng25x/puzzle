@@ -1,5 +1,7 @@
 #include "img_process.h"
 
+using namespace cv;
+
 void rotateImage(Mat& img, Mat& dst, double degree, Scalar color)
 {
     float angle = degree * CV_PI / 180;
@@ -15,5 +17,5 @@ void rotateImage(Mat& img, Mat& dst, double degree, Scalar color)
 
     Size img_size(rotate_width, rotate_height);
 
-    warpAffine(img, dst, rot_mat, img_size, INTER_NEAREST, BORDER_CONSTANT, color));
+    warpAffine(img, dst, rot_mat, img_size, INTER_NEAREST, BORDER_CONSTANT, color);
 }

@@ -48,6 +48,7 @@ set(LIB_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/ActModel
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/yaml
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/fm_clustering
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/img_process
     )
 
 # configure

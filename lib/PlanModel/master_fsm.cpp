@@ -11,7 +11,7 @@
 using namespace std;
 using namespace cv;
 
-void PlanModel::state_init(SenseData* senseData, PlanData* planData)
+void PlanModel::state_init(SenseData* senseData, PlanData* planData, ActData* actData)
 {
     fragments.clear();
     
@@ -25,9 +25,8 @@ void PlanModel::state_init(SenseData* senseData, PlanData* planData)
     init.arm.value = {0, 0, 0, 0, -90, 0};
 
     //sucker
-    init.sucker.resize(suckerNum);
-    for(int i = 0; i < suckerNum; i++)
-        init.sucker[i].sw = 0;
+    init.sucker.resize(1);
+    init.sucker[0].sw = 0;
 
     planData->action.push_back(init);
 
@@ -35,12 +34,12 @@ void PlanModel::state_init(SenseData* senseData, PlanData* planData)
     switchMaster(MasterState::IDENTIFY);
 }
 
-void PlanModel::state_identify(SenseData* senseData, PlanData* planData)
+void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData* actData)
 {
     //find puzzle in work space
     Mat ws_rgb(senseData->rs_rgb[0], roi);
     Mat ws_xyz(senseData->rs_xyz[0], roi);
-    Mat gray;
+    Mat ws_gray;
     cvtColor(ws_rgb, ws_gray, COLOR_BGR2GRAY);
     threshold(ws_gray, ws_gray, thres, THRESH_BINARY_INV);
 
@@ -145,101 +144,73 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData)
 
     //corner point
     
-    //act
-    planData->action.arm.sw = 0;
-    planData->action.gripper.sw = 0;
-    planData->action.sucker.sw = 0;
+    //arm
+    Action identify;
+    identify.arm.sw = 0;
 
-    while(waitKey(10) != 32) {}
+    //sucker
+    identify.sucker.resize(1);
+    identify.sucker[0].sw = 0;
+
+    planData->action.clear();
+    planData->action.push_back(identify);
 
     //state switch
     switchMaster(MasterState::PIECE);
 }
 
-void PlanModel::state_piece(SenseData* senseData, PlanData* planData)
-{
-
-    //act
-    planData->action.arm.sw = 0;
-    planData->action.gripper.sw = 0;
-    planData->action.sucker.sw = 0;
-
-    //state switch
-    switchMaster(MasterState::BOARD_EXIST_CHECK);
-}
-
-
-void PlanModel::ai_play(SenseData* senseData, PlanData* planData)
+void PlanModel::state_piece(SenseData* senseData, PlanData* planData, ActData* actData)
 {
     switch(slave)
     {
-        case AI_INIT:
-            cout << "ai init" << endl;
-            
-            ai_init(senseData, planData);
+        case TRACE:
+            cout << "piece trace" << endl;
+
+            piece_trace(senseData, planData, actData);
             break;
             
-        case POSITION_DECIDE:
-            cout << "ai decide position" << endl;
+        case CATCH:
+            cout << "piece catch" << endl;
             
-            position_decide(senseData, planData);
+            piece_catch(senseData, planData, actData);
             break;
             
-        case SKY_MOVE_TO_CUBE:
-            cout << "ai sky move to cube" << endl;
+        case GO_PUT:
+            cout << "piece go put" << endl;
             
-            ai_sky_move_to_cube(senseData, planData);
+            piece_go_put(senseData, planData, actData);
             break;
 
-        case ARM_MOVE_TO_CUBE:
-            cout << "ai move to cube" << endl;
+        case PUT:
+            cout << "piece put" << endl;
             
-            ai_arm_move_to_cube(senseData, planData);
+            piece_put(senseData, planData, actData);
             break;
             
-        case CATCH_CUBE:
-            cout << "ai catch cube" << endl;
-            
-            ai_catch_cube(senseData, planData);
-            break;
+        case FINISH:
+            cout << "piece finish" << endl;
 
-        case FINISH_CATCH_CUBE:
-            cout << "ai finish catch cube" << endl;
-            
-            ai_finish_catch_cube(senseData, planData);
-            break;
-            
-        case MOVE_TO_BOARD:
-            cout << "ai move to board" << endl;
-            
-            ai_move_to_board(senseData, planData);
-            break;
-            
-        case PUT_CUBE:
-            cout << "ai put cube" << endl;
-            
-            ai_put_cube(senseData, planData);
-            break;
-            
-        case AI_FINISH:
-            cout << "ai finish" << endl;
-            
-            ai_finish(senseData, planData);
+            piece_finish(senseData, planData, actData);
             break;
     }
 }
 
-void PlanModel::state_finish(SenseData* senseData, PlanData* planData)
+void PlanModel::state_finish(SenseData* senseData, PlanData* planData, ActData* actData)
 {
     finish = 1;
 
-    //move
-    planData->action.arm.sw = 1;
-    planData->action.arm.coordType = Hiwin::CoordType::Joint;
-    planData->action.arm.moveType = Hiwin::MoveType::Absolute;
-    planData->action.arm.ctrlType = Hiwin::CtrlType::Linear;
-    planData->action.arm.feedRate = 10;
-    planData->action.arm.value = {0, 0, 0, 0, -90, 0};
-    planData->action.gripper.sw = 0;
-    planData->action.sucker.sw = 0;
+    //arm
+    Action go_home;
+    go_home.arm.sw = 1;
+    go_home.arm.coordType = HiwinSDK::CoordType::Joint;
+    go_home.arm.moveType = HiwinSDK::MoveType::Absolute;
+    go_home.arm.ctrlType = HiwinSDK::CtrlType::Linear;
+    go_home.arm.feedRate = 10;
+    go_home.arm.value = {0, 0, 0, 0, -90, 0};
+
+    //sucker
+    go_home.sucker[0].sw = 0;
+
+    planData->action.clear();
+    planData->action.push_back(go_home);
 }

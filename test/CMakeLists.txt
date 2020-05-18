@@ -8,18 +8,16 @@ set(PROJECT_DEPS
 ActModel SenseModel SPAData 
 Hiwin hrsdk_ctrl kproto
 ${MODBUS_LIBRARIES}
-lbp_cf lbp gray_cf rgb_cf surf_cf surf_angle
-rgb_color_adjust color_adjust hist
-fm_clustering graph_segmentation
+rgb_cf
+rgb_color_adjust hist
+fm_clustering
 serialController
 serial ${SERIALPORT_LIBRARIES}
-yolo_client ${DARKNET_LIBRARIES}
 ${ZED_LIBRARIES}
+img_process
 realsense_lib ${realsense2_LIBRARY} ${OpenCV_LIBS}
-SocketHelper Socket
 ${CUDA_LIBRARIES}
-yaml yamlParser ${YAML_CPP_LIBRARIES}
-"/usr/local/lib/libyaml-cpp.a"
+yaml yaml-cpp
 pthread
 )
 

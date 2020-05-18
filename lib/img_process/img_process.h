@@ -3,6 +3,6 @@
 
 #include <opencv2/opencv.hpp>
 
-void rotateImage(Mat& img, Mat& dst, double degree, Scalar color);
+void rotateImage(cv::Mat& img, cv::Mat& dst, double degree, cv::Scalar color);
 
 #endif
