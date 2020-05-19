@@ -18,16 +18,18 @@ PlanModel::PlanModel(const YAML::Node& plan)
     switchMaster(MasterState::INIT);
     finish = 0;
 
-    //work space
+    //work
+    work_posture = config["work posture"].as<vector<double>>();
     roi = Rect(Point( config["work space"]["x"].as<int>(), config["work space"]["y"].as<int>() ), Size( config["work space"]["w"].as<int>(), config["work space"]["h"].as<int>() ));
 
     //coordinate
     sucker_coord.clear();
     for(size_t i = 0; i < plan["sucker_coord"].size(); i++)
         sucker_coord = plan["sucker_coord"][i].as<array<double, 3>>();
-    camera_coord = plan["camera_coord"].as<array<double, 3>>();
 
     //puzzle sample
+    fragments.clear();
+    
     sample.clear();
     for(size_t i = 0; i < plan["sample"].size(); i++)
     {
@@ -35,7 +37,7 @@ PlanModel::PlanModel(const YAML::Node& plan)
         s.img = plan["sample"][i].as<Mat>();
         sample.push_back(s);
     }
-    
+
     //image process
     thres = plan["threshold"].as<int>();
 }

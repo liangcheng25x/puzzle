@@ -5,18 +5,13 @@ sensePara:
             height: 720
 
 planPara:
-    work space:
+    work posture: [0, 0, 0, 0, 0, 0]
+    work space: 
         x: 0
         y: 0
         w: 0
         h: 0
     threshold: 200
-    sucker_coord: 
-        - [-42, 62.7, 99]
-        - [-42, 62.7, 99]
-        - [-42, 62.7, 99]
-        - [-42, 62.7, 99]
-    camera_coord: [-3.203, -189.245, -534]
     sample:
     - puzzle_model/0.jpg
     - puzzle_model/1.jpg
@@ -36,6 +31,8 @@ planPara:
     - puzzle_model/15.jpg
     - puzzle_model/16.jpg
     - puzzle_model/17.jpg
+    sucker_coord: 
+        - [-42, 62.7, 99]
 
 actPara:
     arm: 
@@ -45,7 +42,7 @@ actPara:
         accel: 15
         feedRate: 10
         ptpSpeed: 10
-        linSpeed: 1200
+        linSpeed: 600
         baseNum: 0
         base: [0, 0, 0, 0, 0, 0]
         toolNum: 0
@@ -54,8 +51,5 @@ actPara:
         port: "/dev/ttyUSB0"
         sucker: 
             - pin: 47
-            - pin: 49
-            - pin: 51
-            - pin: 53
 
 setting file: puzzle.yaml

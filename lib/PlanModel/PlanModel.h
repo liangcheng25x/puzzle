@@ -43,6 +43,7 @@ enum class MasterState
 
 enum PieceState
 {
+    DECISION,
     TRACE,
     CATCH,
     GO_PUT,
@@ -67,9 +68,10 @@ private:
     void switchMaster(MasterState master);
     void setState(MasterState master, int slave);
 
-    //work space
+    //work
+    std::vector<double> work_posture;
     cv::Rect roi;
-    
+
     //coordinate
     std::vector<std::array<double, 3>> sucker_coord;
     std::array<double, 3> camera_coord;
@@ -86,6 +88,7 @@ private:
     void state_finish(SenseData* senseData, PlanData* planData, ActData* actData);
     
     //piece fsm
+    void piece_decision(SenseData* senseData, PlanData* planData, ActData* actData);
     void piece_trace(SenseData* senseData, PlanData* planData, ActData* actData);
     void piece_catch(SenseData* senseData, PlanData* planData, ActData* actData);
     void piece_go_put(SenseData* senseData, PlanData* planData, ActData* actData);

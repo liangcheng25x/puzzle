@@ -1,10 +1,5 @@
 #include <iostream>
-#include "SPAData.h"
-#include "SenseModel.h"
 #include "PlanModel.h"
-#include "HiwinSDK.h"
-#define OPENCV
-#include <yolo_v2_class.hpp>
 #include "img_process.h"
 #include "rgb_cf.h"
 
@@ -13,16 +8,14 @@ using namespace cv;
 
 void PlanModel::state_init(SenseData* senseData, PlanData* planData, ActData* actData)
 {
-    fragments.clear();
-    
     //arm: go home
     Action init;
     init.arm.sw = 1;
-    init.arm.coordType = HiwinSDK::CoordType::Joint;
+    init.arm.coordType = HiwinSDK::CoordType::Coord;
     init.arm.moveType = HiwinSDK::MoveType::Absolute;
     init.arm.ctrlType = HiwinSDK::CtrlType::Linear;
     init.arm.feedRate = 10;
-    init.arm.value = {0, 0, 0, 0, -90, 0};
+    init.arm.value = work_posture;
 
     //sucker
     init.sucker.resize(1);
@@ -36,12 +29,17 @@ void PlanModel::state_init(SenseData* senseData, PlanData* planData, ActData* ac
 
 void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData* actData)
 {
+    //coordinate transform
+    cameraCoord2armCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], 1000);
+    relaCoord2absoCoord();
+
     //find puzzle in work space
     Mat ws_rgb(senseData->rs_rgb[0], roi);
     Mat ws_xyz(senseData->rs_xyz[0], roi);
+    Mat ws_depth(senseData->rs_depth[0], roi);
     Mat ws_gray;
-    cvtColor(ws_rgb, ws_gray, COLOR_BGR2GRAY);
-    threshold(ws_gray, ws_gray, thres, THRESH_BINARY_INV);
+    cvtColor(ws_depth, ws_gray, COLOR_BGR2GRAY);
+    threshold(ws_gray, ws_gray, thres, THRESH_BINARY);
 
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
@@ -53,7 +51,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         RotatedRect roRect( minAreaRect(contours[i]) );
         Rect boundRect( roRect.boundingRect() );
         double x = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.br.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x);
-        double y = senseData->ws_xyz[0].at<Vec3f>(boundRect.br.y, boundRect.tl.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x);
+        double y = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.br.y, boundRect.tl.x);
         double area = x * y;
         if(900 < area && area < 3500)//unit: mm
         {
@@ -76,7 +74,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
             fragments.push_back(puzzle);
         }
     }
-    
+
     //histogram
     vector<Mat> samples(sample.size());
     for(size_t i = 0; i < sample.size(); i++)
@@ -108,7 +106,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         else
         {
             resize(sample[fragments[i].cls].img, resized_sample, Size(fragments[i].img.cols, fragments[i].img.rows);
-            resized_fragment = fragments[i].cls;
+            resized_fragment = fragments[i].img;
         }
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
@@ -120,11 +118,13 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         {
             Mat diffirence_img;
             absdiff(resized_sample, rotate_imgs[j], diffirence_img);
+            
+            //how many scalar channels
             Scalar s = sum(diffirence_img);
             cout << s << endl;
             diffirence.push_back();
         }
-        
+
         int min_index = 0;
         double min = diffirence[0];
         for(size_t j = 0; j < diffirence.size(); j++)
@@ -163,30 +163,36 @@ void PlanModel::state_piece(SenseData* senseData, PlanData* planData, ActData* a
 {
     switch(slave)
     {
+        case DECISION:
+            cout << "piece decision" << endl;
+
+            piece_decision(senseData, planData, actData);
+            break;
+
         case TRACE:
             cout << "piece trace" << endl;
 
             piece_trace(senseData, planData, actData);
             break;
-            
+
         case CATCH:
             cout << "piece catch" << endl;
-            
+
             piece_catch(senseData, planData, actData);
             break;
-            
+
         case GO_PUT:
             cout << "piece go put" << endl;
-            
+
             piece_go_put(senseData, planData, actData);
             break;
 
         case PUT:
             cout << "piece put" << endl;
-            
+
             piece_put(senseData, planData, actData);
             break;
-            
+
         case FINISH:
             cout << "piece finish" << endl;
 

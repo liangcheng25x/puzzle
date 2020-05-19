@@ -19,3 +19,37 @@ void rotateImage(Mat& img, Mat& dst, double degree, Scalar color)
 
     warpAffine(img, dst, rot_mat, img_size, INTER_NEAREST, BORDER_CONSTANT, color);
 }
+
+void cameraCoord2armCoord(cv::Mat& src, cv::Mat& dst, double m)
+{
+    Mat _dst(src.size(), src.type());
+    
+    for(int i = 0; i < _dst.rows; i++)
+    {
+        for(int j = 0; j < _dst.cols; j++)
+        {
+            _dst.at<Vec3f>(i, j)[0] = m * src.at<Vec3f>(i, j)[0];
+            _dst.at<Vec3f>(i, j)[1] = -1 * m * src.at<Vec3f>(i, j)[1];
+            _dst.at<Vec3f>(i, j)[2] = -1 * m * src.at<Vec3f>(i, j)[2];
+        }
+    }
+    
+    _dst.copyTo(dst);
+}
+
+void relaCoord2absoCoord(cv::Mat& src, cv::Mat& dst, std::vector<double> base)
+{
+    Mat _dst(src.size(), src.type());
+
+    for(int i = 0; i < _dst.rows; i++)
+    {
+        for(int j = 0; j < _dst.cols; j++)
+        {
+            _dst.at<Vec3f>(i, j)[0] += base[0];
+            _dst.at<Vec3f>(i, j)[1] += base[1];
+            _dst.at<Vec3f>(i, j)[2] += base[2];
+        }
+    }
+
+    _dst.copyTo(dst);
+}

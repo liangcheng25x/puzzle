@@ -25,33 +25,36 @@ typedef struct
 
 int main(int argc, char** argv)
 {
-    Mat img = imread(argv[1]);
-    Rect roi(Point(120, 0), Point(1120, 720));
-    
-    Mat ws_rgb(img, roi);
+    Mat rgb = imread(argv[1]);
+    Mat depth = imread(argv[2]);
+    Rect roi;
+    roi = Rect(Point( config["work space"]["x"].as<int>(), config["work space"]["y"].as<int>() ), Size( config["work space"]["w"].as<int>(), config["work space"]["h"].as<int>() ));
+
+    Mat ws_depth(depth, roi);
+    Mat ws_rgb(rgb, roi);
     Mat ws_gray;
-    cvtColor(ws_rgb, ws_gray, COLOR_BGR2GRAY);
-    int thres = atoi(argv[2]);
+    cvtColor(ws_depth, ws_gray, COLOR_BGR2GRAY);
+    int thres = atoi(argv[3]);
     threshold(ws_gray, ws_gray, thres, 255, THRESH_BINARY_INV);
-    
+
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     findContours( ws_gray, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE );
 
     vector<fragment> fragments;
-    
+
     for(size_t i = 0; i < contours.size(); i++)
     {
         RotatedRect roRect( minAreaRect(contours[i]) );
         Rect boundRect( roRect.boundingRect() );
         double area = contourArea(contours[i]);
-        
+
         if(5000 < area && area < 30000)//unit: mm
         {
             fragment puzzle;
 
-            Scalar color( 0, 255, 0 );
-            drawContours( ws_rgb, contours, i, color, 2, 8);
+            /*Scalar color( 0, 255, 0 );
+            drawContours( ws_rgb, contours, i, color, 2, 8);*/
 
             //normalize img
             Mat and_img, rotate_img;
@@ -69,13 +72,27 @@ int main(int argc, char** argv)
             fragments.push_back(puzzle);
         }
     }
-    
+
+    vector<Mat> samples(sample.size());
+    for(size_t i = 0; i < sample.size(); i++)
+    {
+        samples[i] = sample[i].img;
+    }
+    RGB_CF rgb_cf;
+    rgb_cf.init(samples);
+    for(size_t i = 0; i < fragments.size(); i++)
+    {
+        vector<similarity_list> list;
+        list = rgb_cf.classify(fragments[i].img);
+        fragments[i].cls = list[0].cls;
+    }
+
     cout << "fragment length: " << fragments.size() << endl;
     for(size_t i = 0; i < fragments.size(); i++)
     {
         imshow("img" + to_string(i), fragments[i].img);
     }
-    
+
     imshow("rgb", ws_rgb);
     imshow("gray", ws_gray);
     waitKey();

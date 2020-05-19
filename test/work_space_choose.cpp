@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     YAML::Node config = LoadFile( argv[1] );
     SenseModel senseModel( config["sensePara"] );
     SenseData senseData;
-    
+
     Mat img;
     namedWindow("img", WINDOW_AUTOSIZE);
     mouse_info info = {0, Point(0, 0), Point(0, 0), Point(0, 0)};
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         senseModel.run();
         senseModel.getImgs(&senseData);
         senseData.zed_rgb[0].copyTo(img);
-        
+
         setMouseCallback("img", on_mouse, &info);
 
         //draw mouse information
@@ -53,9 +53,9 @@ int main(int argc, char** argv)
             break;
         }
     }
-    
+
     destroyWindow("img");
-    
+
     if(run)
     {
         ofstream fout( "work_space.yaml" );
