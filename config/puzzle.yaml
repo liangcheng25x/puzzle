@@ -7,30 +7,29 @@ sensePara:
 planPara:
     work posture: [0, 0, 0, 0, 0, 0]
     work space: 
-        x: 0
+        x: 120
         y: 0
-        w: 0
-        h: 0
-    threshold: 200
+        w: 1080
+        h: 720
+    threshold: 50
     sample:
-    - puzzle_model/0.jpg
-    - puzzle_model/1.jpg
-    - puzzle_model/2.jpg
-    - puzzle_model/3.jpg
-    - puzzle_model/4.jpg
-    - puzzle_model/5.jpg
-    - puzzle_model/6.jpg
-    - puzzle_model/7.jpg
-    - puzzle_model/8.jpg
-    - puzzle_model/9.jpg
-    - puzzle_model/10.jpg
-    - puzzle_model/11.jpg
-    - puzzle_model/12.jpg
-    - puzzle_model/13.jpg
-    - puzzle_model/14.jpg
-    - puzzle_model/15.jpg
-    - puzzle_model/16.jpg
-    - puzzle_model/17.jpg
+        - puzzle_model/0.jpeg
+        - puzzle_model/1.jpeg
+        - puzzle_model/2.jpeg
+        - puzzle_model/3.jpeg
+        - puzzle_model/4.jpeg
+        - puzzle_model/5.jpeg
+        - puzzle_model/6.jpeg
+        - puzzle_model/7.jpeg
+        - puzzle_model/8.jpeg
+        - puzzle_model/9.jpeg
+        - puzzle_model/10.jpeg
+        - puzzle_model/11.jpeg
+        - puzzle_model/12.jpeg
+        - puzzle_model/13.jpeg
+        - puzzle_model/14.jpeg
+        - puzzle_model/15.jpeg
+        - puzzle_model/16.jpeg
     sucker_coord: 
         - [-42, 62.7, 99]
 
