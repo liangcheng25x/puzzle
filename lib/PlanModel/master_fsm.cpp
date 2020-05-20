@@ -111,7 +111,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
         {
-            rotateImg(resized_fragment, rotate_imgs[j], j * 90.0, Scalar(0, 0, 0));
+            rotateImage(resized_fragment, rotate_imgs[j], j * 90.0, Scalar(0, 0, 0));
         }
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
@@ -122,7 +122,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
             //how many scalar channels
             Scalar s = sum(diffirence_img);
             cout << s << endl;
-            diffirence.push_back();
+            diffirence.push_back(s);
         }
 
         int min_index = 0;

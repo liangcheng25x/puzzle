@@ -1,7 +1,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "img_process.h"
-#include "rgb_cf.h"
+//#include "rgb_cf.h"
+#include "surf_cf.h"
 #include <yaml-cpp/yaml.h>
 #include "yaml.h"
 
@@ -101,22 +102,95 @@ int main(int argc, char** argv)
         samples.push_back(tmp);
     }
 
-    RGB_CF rgb_cf;
+    /*RGB_CF rgb_cf;
     rgb_cf.init(samples);
     for(size_t i = 0; i < fragments.size(); i++)
     {
         vector<similarity_list> list;
         list = rgb_cf.classify(fragments[i].img);
         fragments[i].cls = list[0].cls;
-    }
-
-    cout << "fragment length: " << fragments.size() << endl;
+    }*/
+    
+    Surf_CF surf_cf;
+    surf_cf.init(samples);
     for(size_t i = 0; i < fragments.size(); i++)
     {
-        imshow("img" + to_string(i), fragments[i].img);
+        vector<similarity_list> list;
+        list = surf_cf.classify(fragments[i].img);
+//         cout << "0: " << list[0].similarity << ", cls: " << list[0].cls << endl;
+//         cout << "1: " << list[1].similarity << ", cls: " << list[1].cls << endl;
+//         cout << "2: " << list[2].similarity << ", cls: " << list[2].cls << endl;
+        if(list[1].similarity > 2)
+            fragments[i].cls = list[0].cls;
+        else
+            fragments[i].cls = list[1].cls;
+    }
+    
+    vector<specimen> sample(samples.size());
+    for(size_t i = 0; i < sample.size(); i++)
+        sample[i].img = samples[i];
+
+    //angle
+    for(size_t i = 0; i < fragments.size(); i++)
+    {
+        //produce rotate fragments
+        vector<Mat> rotate_imgs(4);
+
+        for(size_t j = 0; j < rotate_imgs.size(); j++)
+        {
+            rotateImage(fragments[i].img, rotate_imgs[j], j * 90.0, Scalar(0, 0, 0));
+            cout << "rotate fragments rows: " << rotate_imgs[j].rows << ", cols: " << rotate_imgs[j].cols << endl;
+        }
+
+        //resize samples and unknown fragments
+        Mat resized_sample;
+        vector<double> diffirence(4);
+
+        for(size_t j = 0; j < rotate_imgs.size(); j++)
+        {
+            if( sample[fragments[i].cls].img.total() <= rotate_imgs[j].total() )
+            {
+                resize(rotate_imgs[j], rotate_imgs[j], Size(sample[fragments[i].cls].img.cols, sample[fragments[i].cls].img.rows));
+                resized_sample = sample[fragments[i].cls].img;
+            }
+            else
+            {
+                resize(sample[fragments[i].cls].img, resized_sample, Size(rotate_imgs[j].cols, rotate_imgs[j].rows));
+            }
+
+            //count diffirence between sample and rotated fragments
+            Mat diff_img;
+            absdiff(resized_sample, rotate_imgs[j], diff_img);
+            Scalar s = sum(diff_img);
+            //cout << s[0] + s[1] + s[2] << endl;
+            diffirence[j] = s[0] + s[1] + s[2];
+        }
+
+        //find minimun diffirence to decide angle
+        int min_index = 0;
+        double min = diffirence[0];
+        for(size_t j = 0; j < diffirence.size(); j++)
+        {
+            if(diffirence[j] < min)
+            {
+                min_index = j;
+                min = diffirence[j];
+            }
+        }
+
+        fragments[i].angle += min_index * -90;
+
+//         if(fragments[i].angle > 180)
+//             fragments[i].angle -= 360;
+    }
+    
+    for(size_t i = 0; i < fragments.size(); i++)
+    {
+        //imshow("img" + to_string(i), fragments[i].img);
         cout << "img " << i << " class: " << fragments[i].cls << endl;
         cout << "center: " << fragments[i].center[0] << ", " << fragments[i].center[1] << endl;
         cout << "angle: " << fragments[i].angle << endl;
+        putText(ws_rgb, to_string(fragments[i].angle), Point(fragments[i].center[0], fragments[i].center[1]), 0, 0.8, Scalar(255, 0, 0), 2);
 //         waitKey();
 //         destroyWindow("img" + to_string(i));
     }

@@ -8,7 +8,8 @@ set(PROJECT_DEPS
 ActModel SenseModel SPAData 
 Hiwin hrsdk_ctrl kproto
 ${MODBUS_LIBRARIES}
-rgb_cf
+#rgb_cf
+surf_cf
 rgb_color_adjust hist
 fm_clustering
 serialController
