@@ -31,19 +31,22 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
 {
     //coordinate transform
     cameraCoord2armCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], 1000);
-    relaCoord2absoCoord();
-
-    //find puzzle in work space
+    relaCoord2absoCoord(senseData->rs_xyz[0], senseData->rs_xyz, actData->currentPos);
+    
+    //extract interesting region of mat
     Mat ws_rgb(senseData->rs_rgb[0], roi);
     Mat ws_xyz(senseData->rs_xyz[0], roi);
     Mat ws_depth(senseData->rs_depth[0], roi);
-    Mat ws_gray;
-    cvtColor(ws_depth, ws_gray, COLOR_BGR2GRAY);
-    threshold(ws_gray, ws_gray, thres, THRESH_BINARY);
 
+    //set threshold for depth image
+    Mat ws_gray_depth, ws_thresh_depth;
+    cvtColor(ws_depth, ws_gray_depth, COLOR_BGR2GRAY);
+    threshold(ws_gray_depth, ws_thresh_depth, thres, THRESH_BINARY);
+
+    //find all contours
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
-    findContours( ws_gray, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE );
+    findContours( ws_thresh_depth, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE );
 
     //record and_img center xyz initial_angle
     for(size_t i = 0; i < contours.size(); i++)
@@ -52,17 +55,30 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         Rect boundRect( roRect.boundingRect() );
         double x = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.br.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x);
         double y = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.br.y, boundRect.tl.x);
-        double area = x * y;
+        double area = abs(x) * abs(y);
         if(900 < area && area < 3500)//unit: mm
         {
             fragment puzzle;
-
-            //normalize img
+            
+            //produce mask
             Mat and_img, rotate_img;
-            bitwise_and(Mat(ws_rgb, boundRect), Mat(ws_rgb, boundRect), and_img, Mat(ws_gray, boundRect));
-            rotateImg(and_img, rotate_img, roRect.angle, Scalar(0, 0, 0));
+            Mat mask = Mat::zeros(ws_depth.size(), CV_8U);
 
-            puzzle.img = rotate_img.clone();
+            Point2f vertices[4];
+            roRect.points(vertices);
+            vector<vector<Point>> roVertices;
+            vector<Point> roVertice;
+            for(int i = 0; i < 4; i++)
+            {
+                roVertice.push_back(vertices[i]);
+            }
+            roVertices.push_back(roVertice);
+            drawContours( mask, roVertices, 0, 255, -1);
+            bitwise_and(Mat(ws_rgb, boundRect), Mat(ws_rgb, boundRect), and_img, Mat(mask, boundRect));
+            rotateImageInboundRect(and_img, rotate_img, roRect.angle, Scalar(0, 0, 0));
+
+            //enter information
+            rotate_img.copyTo(puzzle.img);
             puzzle.angle = -roRect.angle;
             puzzle.center[0] = roRect.center.x;
             puzzle.center[1] = roRect.center.y;
@@ -81,50 +97,53 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
     {
         samples[i] = sample[i].img;
     }
-    RGB_CF rgb_cf;
-    rgb_cf.init(samples);
+    Surf_CF surf_cf;
+    surf_cf.init(samples);
     for(size_t i = 0; i < fragments.size(); i++)
     {
         vector<similarity_list> list;
-        list = rgb_cf.classify(fragments[i].img);
-        fragments[i].cls = list[0].cls;
+        list = surf_cf.classify(fragments[i].img);
+        if(list[1].similarity > 2)
+            fragments[i].cls = list[0].cls;
+        else
+            fragments[i].cls = list[1].cls;
     }
 
     //angle
     for(size_t i = 0; i < fragments.size(); i++)
     {
+        //produce rotate fragments
         vector<Mat> rotate_imgs(4);
-        vector<double> diffirence;
-
-        //resize
-        Mat resized_sample, resized_fragment;
-        if(sample[fragments[i].cls].img.total() <= fragments[i].img.total())
-        {
-            resize(fragments[i].img, resized_fragment, Size(sample[fragments[i].cls].img.cols, sample[fragments[i].cls].img.rows);
-            resized_sample = sample[fragments[i].cls].img;
-        }
-        else
-        {
-            resize(sample[fragments[i].cls].img, resized_sample, Size(fragments[i].img.cols, fragments[i].img.rows);
-            resized_fragment = fragments[i].img;
-        }
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
         {
-            rotateImage(resized_fragment, rotate_imgs[j], j * 90.0, Scalar(0, 0, 0));
+            rotateImage(fragments[i].img, rotate_imgs[j], j * -90.0, Scalar(0, 0, 0));
         }
+
+        //resize samples and unknown fragments
+        Mat resized_sample;
+        vector<double> diffirence(4);
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
         {
-            Mat diffirence_img;
-            absdiff(resized_sample, rotate_imgs[j], diffirence_img);
-            
-            //how many scalar channels
-            Scalar s = sum(diffirence_img);
-            cout << s << endl;
-            diffirence.push_back(s);
+            if( sample[fragments[i].cls].img.total() <= rotate_imgs[j].total() )
+            {
+                resize(rotate_imgs[j], rotate_imgs[j], Size(sample[fragments[i].cls].img.cols, sample[fragments[i].cls].img.rows));
+                resized_sample = sample[fragments[i].cls].img;
+            }
+            else
+            {
+                resize(sample[fragments[i].cls].img, resized_sample, Size(rotate_imgs[j].cols, rotate_imgs[j].rows));
+            }
+
+            //count diffirence between sample and rotated fragments
+            Mat diff_img;
+            absdiff(resized_sample, rotate_imgs[j], diff_img);
+            Scalar s = sum(diff_img);
+            diffirence[j] = s[0] + s[1] + s[2];
         }
 
+        //find minimun diffirence to decide angle
         int min_index = 0;
         double min = diffirence[0];
         for(size_t j = 0; j < diffirence.size(); j++)
@@ -135,25 +154,15 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
                 min = diffirence[j];
             }
         }
-        
-        fragments[i].angle += min_index;
-        
-//         if(fragments[i].angle > 180)
-//             fragments[i].angle -= 360;
+
+        fragments[i].angle += min_index * 90;
+
+        if(fragments[i].angle > 180)
+            fragments[i].angle -= 360;
     }
-
-    //corner point
     
-    //arm
-    Action identify;
-    identify.arm.sw = 0;
-
-    //sucker
-    identify.sucker.resize(1);
-    identify.sucker[0].sw = 0;
-
+    //act
     planData->action.clear();
-    planData->action.push_back(identify);
 
     //state switch
     switchMaster(MasterState::PIECE);

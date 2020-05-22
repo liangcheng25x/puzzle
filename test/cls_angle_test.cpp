@@ -138,7 +138,7 @@ int main(int argc, char** argv)
 
         for(size_t j = 0; j < rotate_imgs.size(); j++)
         {
-            rotateImage(fragments[i].img, rotate_imgs[j], j * 90.0, Scalar(0, 0, 0));
+            rotateImage(fragments[i].img, rotate_imgs[j], j * -90.0, Scalar(0, 0, 0));
             cout << "rotate fragments rows: " << rotate_imgs[j].rows << ", cols: " << rotate_imgs[j].cols << endl;
         }
 
@@ -178,10 +178,10 @@ int main(int argc, char** argv)
             }
         }
 
-        fragments[i].angle += min_index * -90;
+        fragments[i].angle += min_index * 90;
 
-//         if(fragments[i].angle > 180)
-//             fragments[i].angle -= 360;
+        if(fragments[i].angle > 180)
+            fragments[i].angle -= 360;
     }
     
     for(size_t i = 0; i < fragments.size(); i++)
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
         cout << "img " << i << " class: " << fragments[i].cls << endl;
         cout << "center: " << fragments[i].center[0] << ", " << fragments[i].center[1] << endl;
         cout << "angle: " << fragments[i].angle << endl;
-        putText(ws_rgb, to_string(fragments[i].angle), Point(fragments[i].center[0], fragments[i].center[1]), 0, 0.8, Scalar(255, 0, 0), 2);
+        putText(ws_rgb, to_string(fragments[i].cls) + ", " + to_string((int)(fragments[i].angle)), Point(fragments[i].center[0], fragments[i].center[1]), 0, 0.8, Scalar(255, 255, 255), 2);
 //         waitKey();
 //         destroyWindow("img" + to_string(i));
     }
