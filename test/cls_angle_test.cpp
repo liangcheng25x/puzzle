@@ -2,7 +2,7 @@
 #include <opencv2/opencv.hpp>
 #include "img_process.h"
 //#include "rgb_cf.h"
-#include "surf_cf.h"
+#include "cf.h"
 #include <yaml-cpp/yaml.h>
 #include "yaml.h"
 
@@ -111,25 +111,30 @@ int main(int argc, char** argv)
         fragments[i].cls = list[0].cls;
     }*/
     
+    cout << "classify" << endl;
+    
     Surf_CF surf_cf;
     surf_cf.init(samples);
+    cout << "surf init" << endl;
     for(size_t i = 0; i < fragments.size(); i++)
     {
-        vector<similarity_list> list;
-        list = surf_cf.classify(fragments[i].img);
-//         cout << "0: " << list[0].similarity << ", cls: " << list[0].cls << endl;
-//         cout << "1: " << list[1].similarity << ", cls: " << list[1].cls << endl;
-//         cout << "2: " << list[2].similarity << ", cls: " << list[2].cls << endl;
-        if(list[1].similarity > 2)
+        vector<cls_info> list;
+        list = surf_cf.classify(fragments[i].img, 5);
+        cout << "0: " << list[0].sl << ", cls: " << list[0].cls << endl;
+        cout << "1: " << list[1].sl << ", cls: " << list[1].cls << endl;
+        cout << "2: " << list[2].sl << ", cls: " << list[2].cls << endl;
+        if(list[0].sl > 30)
             fragments[i].cls = list[0].cls;
         else
-            fragments[i].cls = list[1].cls;
+            fragments[i].cls = list[list.size()-1].cls;
     }
     
     vector<specimen> sample(samples.size());
     for(size_t i = 0; i < sample.size(); i++)
         sample[i].img = samples[i];
 
+    cout << "angle" << endl;
+    
     //angle
     for(size_t i = 0; i < fragments.size(); i++)
     {
@@ -139,7 +144,6 @@ int main(int argc, char** argv)
         for(size_t j = 0; j < rotate_imgs.size(); j++)
         {
             rotateImage(fragments[i].img, rotate_imgs[j], j * -90.0, Scalar(0, 0, 0));
-            cout << "rotate fragments rows: " << rotate_imgs[j].rows << ", cols: " << rotate_imgs[j].cols << endl;
         }
 
         //resize samples and unknown fragments
@@ -191,6 +195,7 @@ int main(int argc, char** argv)
         cout << "center: " << fragments[i].center[0] << ", " << fragments[i].center[1] << endl;
         cout << "angle: " << fragments[i].angle << endl;
         putText(ws_rgb, to_string(fragments[i].cls) + ", " + to_string((int)(fragments[i].angle)), Point(fragments[i].center[0], fragments[i].center[1]), 0, 0.8, Scalar(255, 255, 255), 2);
+        circle(ws_rgb, Point(fragments[i].center[0], fragments[i].center[1]), 3, Scalar(0, 0, 255), -1, 8);
 //         waitKey();
 //         destroyWindow("img" + to_string(i));
     }

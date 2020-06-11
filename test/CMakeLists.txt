@@ -4,12 +4,11 @@ cmake_minimum_required(VERSION 2.8)
 set(PROJECT_NAME cmake_test)
 set(PROJECT_LANGUAGE C CXX)
 set(PROJECT_DEPS 
-#PlanModel 
-ActModel SenseModel SPAData 
+PlanModel ActModel SenseModel
+SPAData
 Hiwin hrsdk_ctrl kproto
 ${MODBUS_LIBRARIES}
-#rgb_cf
-surf_cf
+cf
 rgb_color_adjust hist
 fm_clustering
 serialController

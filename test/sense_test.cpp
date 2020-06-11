@@ -11,7 +11,8 @@ int main(int argc, char** argv)
     YAML::Node config = YAML::LoadFile( argv[1] );
     
     SenseData senseData;
-    SenseModel senseModel( config["sensePara"] );
+    SenseModel senseModel;
+    senseModel.init( config["sense"] );
     
     while(1)
     {

@@ -13,9 +13,11 @@ cv::Mat slMat2cvMat(sl::Mat& input);
 class SenseModel
 {
 public:
-    SenseModel(const YAML::Node& sense);
+    SenseModel();
     ~SenseModel();
 
+    //load data
+    void init(const YAML::Node& sense);
     //modify setting and updata
     void run();
     //draw something by plan data
@@ -32,15 +34,15 @@ private:
     int zedNum;
     sl::Camera* zed;
 
-    std::vector<sl::Mat> sl_rgb, sl_depth, sl_xyz;
+    std::vector<sl::Mat> sl_rgb, sl_depth, sl_point_cloud;
 
     std::vector<cv::Mat> rs_rgb;
-    std::vector<cv::Mat> rs_depth;
-    std::vector<cv::Mat> rs_xyz;
+    std::vector<cv::Mat> rs_v_depth;
+    std::vector<cv::Mat> rs_real_mat;
 
     std::vector<cv::Mat> zed_rgb;
-    std::vector<cv::Mat> zed_depth;
-    std::vector<cv::Mat> zed_xyz;
+    std::vector<cv::Mat> zed_v_depth;
+    std::vector<cv::Mat> zed_point_cloud;
 };
 
 namespace YAML
@@ -70,6 +72,30 @@ namespace YAML
                 param.sdk_gpu_id = node["sdk_gpu_id"].as<int>();
             /*if(node["sdk_cuda_ctx"])
                 param.sdk_cuda_ctx = node["sdk_cuda_ctx"].as<int>();*/
+
+            return true;
+        }
+    };
+
+    template<>
+    struct convert<sl::RuntimeParameters>
+    {
+        static bool decode(const Node& node, sl::RuntimeParameters& param)
+        {
+            if(node["sensing mode"])
+                param.sensing_mode = (sl::SENSING_MODE)node["sensing mode"].as<int>();
+
+            if(node["enable depth"])
+                param.enable_depth = node["enable depth"].as<bool>();
+
+            if(node["confidence threshold"])
+                param.confidence_threshold = node["confidence threshold"].as<int>();
+
+            if(node["texture confidence threshold"])
+                param.confidence_threshold = node["texture confidence threshold"].as<int>();
+
+            if(node["measure3D reference frame"])
+                param.measure3D_reference_frame = (sl::REFERENCE_FRAME)node["measure3D reference frame"].as<int>();
 
             return true;
         }

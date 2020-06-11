@@ -10,22 +10,28 @@
 using namespace std;
 using namespace cv;
 
-PlanModel::PlanModel(const YAML::Node& plan)
+PlanModel::PlanModel()
 {
     cout << "plan model contruct" << endl;
 
     //fsm
     switchMaster(MasterState::INIT);
     finish = 0;
+}
 
+PlanModel::~PlanModel()
+{
+    cout << "plan model destruct" << endl;
+}
+
+void PlanModel::init(const YAML::Node& plan)
+{
     //work
-    work_posture = config["work posture"].as<vector<double>>();
-    roi = Rect(Point( config["work space"]["x"].as<int>(), config["work space"]["y"].as<int>() ), Size( config["work space"]["w"].as<int>(), config["work space"]["h"].as<int>() ));
+    work_posture = plan["work posture"].as<vector<double>>();
+    roi = Rect(Point( plan["work space"]["x"].as<int>(), plan["work space"]["y"].as<int>() ), Size( plan["work space"]["w"].as<int>(), plan["work space"]["h"].as<int>() ));
 
     //coordinate
-    sucker_coord.clear();
-    for(size_t i = 0; i < plan["sucker_coord"].size(); i++)
-        sucker_coord = plan["sucker_coord"][i].as<array<double, 3>>();
+    sucker_coord = plan["sucker_coord"].as< vector< array<double, 3> > >();
 
     //puzzle sample
     fragments.clear();
@@ -40,11 +46,6 @@ PlanModel::PlanModel(const YAML::Node& plan)
 
     //image process
     thres = plan["threshold"].as<int>();
-}
-
-PlanModel::~PlanModel()
-{
-    cout << "plan model destruct" << endl;
 }
 
 void PlanModel::run(SenseData* senseData, PlanData* planData, ActData* actData)

@@ -21,7 +21,8 @@ void on_mouse(int event, int x, int y, int flags, void* para);
 int main(int argc, char** argv)
 {
     YAML::Node config = LoadFile( argv[1] );
-    SenseModel senseModel( config["sensePara"] );
+    SenseModel senseModel;
+    senseModel.init( config["sense"] );
     SenseData senseData;
 
     Mat img;

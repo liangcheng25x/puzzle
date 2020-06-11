@@ -5,10 +5,22 @@ using namespace std;
 using namespace cv;
 using namespace sl;
 
-SenseModel::SenseModel(const YAML::Node& sense)
+SenseModel::SenseModel()
 {
-    cout << "Sense Model contruct" << endl;
+    cout << "SenseModel()" << endl;
+}
 
+SenseModel::~SenseModel()
+{
+    cout << "~SenseModel()" << endl;
+
+    for(int i = 0; i < zedNum; i++)
+        if(zed[i].isOpened())
+            zed[i].close();
+}
+
+void SenseModel::init(const YAML::Node& sense)
+{
     //camera number
     if(sense["rs"])
         rsNum = sense["rs"].size();
@@ -34,28 +46,30 @@ SenseModel::SenseModel(const YAML::Node& sense)
     for(int i = 0; i < zedNum; i++)
     {
         zed[i].open(sense["zed"][i].as<InitParameters>());
+        
+        YAML::Node vedio_setting = sense["zed"][i]["vedio setting"];
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::BRIGHTNESS, vedio_setting["brightness"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::CONTRAST, vedio_setting["contrast"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::HUE, vedio_setting["hue"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::GAMMA, vedio_setting["gamma"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::GAIN, vedio_setting["gain"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::EXPOSURE, vedio_setting["exposure"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::WHITEBALANCE_TEMPERATURE, vedio_setting["whitebalance temperature"].as<int>());
+        zed[i].setCameraSettings(sl::VIDEO_SETTINGS::WHITEBALANCE_AUTO, vedio_setting["whitebalance auto"].as<bool>());
+        
     }
 
     rs_rgb.resize(rsNum);
-    rs_depth.resize(rsNum);
-    rs_xyz.resize(rsNum);
+    rs_v_depth.resize(rsNum);
+    rs_real_mat.resize(rsNum);
 
     sl_rgb.resize(zedNum);
     sl_depth.resize(zedNum);
-    sl_xyz.resize(zedNum);
+    sl_point_cloud.resize(zedNum);
     
     zed_rgb.resize(zedNum);
-    zed_depth.resize(zedNum);
-    zed_xyz.resize(zedNum);
-}
-
-SenseModel::~SenseModel()
-{
-    cout << "Sense Model descontruct" << endl;
-
-    for(int i = 0; i < zedNum; i++)
-        if(zed[i].isOpened())
-            zed[i].close();
+    zed_v_depth.resize(zedNum);
+    zed_point_cloud.resize(zedNum);
 }
 
 void SenseModel::run()
@@ -65,8 +79,8 @@ void SenseModel::run()
     {
         rs[i].update();
         rs_rgb[i] = rs[i].get_rgb_image();
-        rs_depth[i] = rs[i].get_depth_image();
-        rs_xyz[i] = rs[i].get_xyz();
+        rs_v_depth[i] = rs[i].get_depth_image();
+        rs_real_mat[i] = rs[i].get_xyz();
     }
 
     //zed
@@ -76,11 +90,15 @@ void SenseModel::run()
 
         zed[i].retrieveImage(sl_rgb[i], VIEW::LEFT);
         zed[i].retrieveImage(sl_depth[i], VIEW::DEPTH);
-        zed[i].retrieveMeasure(sl_xyz[i], MEASURE::XYZ);
+        zed[i].retrieveMeasure(sl_point_cloud[i], MEASURE::XYZ);
 
         slMat2cvMat(sl_rgb[i]).copyTo(zed_rgb[i]);
-        slMat2cvMat(sl_depth[i]).copyTo(zed_depth[i]);
-        slMat2cvMat(sl_xyz[i]).copyTo(zed_xyz[i]);
+        slMat2cvMat(sl_depth[i]).copyTo(zed_v_depth[i]);
+        slMat2cvMat(sl_point_cloud[i]).copyTo(zed_point_cloud[i]);
+
+        /*zed_rgb[i] = slMat2cvMat(rgb);
+        zed_v_depth[i] = slMat2cvMat(v_depth);
+        zed_point_cloud[i] = slMat2cvMat(point_cloud);*/
     }
 }
 
@@ -111,7 +129,7 @@ void SenseModel::showImgs()
 
         string depth_name = "rs depthImg" + to_string(i);
         namedWindow(depth_name, WINDOW_AUTOSIZE);
-        imshow(depth_name, rs_depth[i]);
+        imshow(depth_name, rs_v_depth[i]);
     }
 
     for(int i = 0; i < zedNum; i++)
@@ -122,7 +140,7 @@ void SenseModel::showImgs()
 
         string depth_name = "zed depthImg" + to_string(i);
         namedWindow(depth_name, WINDOW_AUTOSIZE);
-        imshow(depth_name, zed_depth[i]);
+        imshow(depth_name, zed_v_depth[i]);
     }
 }
 
@@ -139,15 +157,15 @@ void SenseModel::getImgs(SenseData* senseData)
     for(int i = 0; i < rsNum; i++)
     {
         senseData->rs_rgb[i] = rs_rgb[i].clone();
-        senseData->rs_depth[i] = rs_depth[i].clone();
-        senseData->rs_xyz[i] = rs_xyz[i].clone();
+        senseData->rs_depth[i] = rs_v_depth[i].clone();
+        senseData->rs_xyz[i] = rs_real_mat[i].clone();
     }
 
     for(int i = 0; i < zedNum; i++)
     {
         senseData->zed_rgb[i] = zed_rgb[i].clone();
-        senseData->zed_depth[i] = zed_depth[i].clone();
-        senseData->zed_xyz[i] = zed_xyz[i].clone();
+        senseData->zed_depth[i] = zed_v_depth[i].clone();
+        senseData->zed_xyz[i] = zed_point_cloud[i].clone();
     }
 }
 

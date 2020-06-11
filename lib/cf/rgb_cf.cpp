@@ -1,6 +1,4 @@
-#include "rgb_cf.h"
-#include <vector>
-#include <cmath>
+#include "cf.h"
 
 using namespace std;
 using namespace cv;
@@ -23,11 +21,15 @@ RGB_CF::~RGB_CF()
 
 void RGB_CF::init(std::vector<cv::Mat> samples)
 {
-    sample.resize(samples.size());
+    sample.resize( samples.size() );
     for(size_t i = 0; i < samples.size(); i++)
     {
-        samples[i].copyTo(sample[i]);
+        sample[i] = samples[i].clone();
+
+//         Rect roi( (int)(sample[i].cols / partition), (int)(sample[i].rows / partition), (int)(sample[i].cols / partition * (partition - 2)), (int)(sample[i].rows / partition * (partition - 2)) );
+//         sample[i] = Mat(sample[i], roi);
     }
+
     rgb_sample.resize(sample.size());
     hist.resize(sample.size());
 
@@ -39,7 +41,7 @@ void RGB_CF::init(std::vector<cv::Mat> samples)
     for(size_t i = 0; i < sample.size(); i++)
     {
         hist[i].resize( rgb_sample[i].size() );
-
+        
         for(size_t j = 0;j < rgb_sample[i].size(); j++)
         {
             calcHist( &rgb_sample[i][j], 1, 0, Mat(), hist[i][j], 1, &histSize, histRange, true, false );
@@ -47,11 +49,14 @@ void RGB_CF::init(std::vector<cv::Mat> samples)
     }
 }
 
-vector<similarity_list> RGB_CF::classify(cv::Mat img)
+vector<cls_info> RGB_CF::classify(cv::Mat img)
 {
+    //     Rect roi( (int)(img.cols / partition), (int)(img.rows / partition), (int)(img.cols / partition * (partition - 2)), (int)(img.rows / partition * (partition - 2)) );
+    //     img = Mat(img, roi);
+
     vector<Mat> rgb_img;
     split( img, rgb_img);
-    
+
     vector<Mat> img_hist( rgb_img.size() );
     for(size_t i = 0; i < rgb_img.size(); i++)
     {
@@ -65,11 +70,11 @@ vector<similarity_list> RGB_CF::classify(cv::Mat img)
 
         for(size_t j = 0;j < img_hist.size() ; j++)
         {
-            similarity_list tmp = {(int)i, compareHist(img_hist[j], hist[i][j], HISTCMP_INTERSECT)};
+            cls_info tmp = {(int)i, compareHist(img_hist[j], hist[i][j], HISTCMP_INTERSECT)};
             rgb_list[i][j] = tmp;
         }
     }
-    
+
     list.resize( rgb_list.size() );
     for(size_t i = 0; i < rgb_list.size(); i++)
     {
@@ -78,31 +83,31 @@ vector<similarity_list> RGB_CF::classify(cv::Mat img)
 
         for(size_t j = 0; j < rgb_list[i].size(); j++)
         {
-            tmp += pow(rgb_list[i][j].similarity, 2);
+            tmp += pow(rgb_list[i][j].sl, 2);
         }
         
-        list[i].similarity = sqrt(tmp / rgb_img.size());
+        list[i].sl = sqrt(tmp / rgb_img.size());
     }
-    
-    similarity_list_sort();
+
+    class_info_sort(&list, DESCENDING);
 
     return list;
 }
 
-void RGB_CF::similarity_list_sort()
-{
-    similarity_list tmp;
-    
-    for(size_t i = list.size() - 1; i > 0; i--)
-    {
-        for(size_t j = 0; j <= i - 1; j++)
-        {
-            if( list[j].similarity < list[j+1].similarity)
-            {
-                tmp = list[j];
-                list[j] = list[j+1];
-                list[j+1] = tmp;
-            }
-        }
-    }
-}
+// void RGB_CF::similarity_list_sort()
+// {
+//     similarity_list tmp;
+//     
+//     for(size_t i = list.size() - 1; i > 0; i--)
+//     {
+//         for(size_t j = 0; j <= i - 1; j++)
+//         {
+//             if( list[j].similarity < list[j+1].similarity)
+//             {
+//                 tmp = list[j];
+//                 list[j] = list[j+1];
+//                 list[j+1] = tmp;
+//             }
+//         }
+//     }
+// }

@@ -3,7 +3,6 @@
 
 #include "SPAData.h"
 #include "SenseModel.h"
-#include "yolo_client.h"
 #include "rgb_color_adjust.h"
 #include <yaml-cpp/yaml.h>
 #define OPENCV
@@ -13,7 +12,7 @@ enum PuzzleState
 {
     WAIT,
     TRANSPORT,
-    FINISH
+    PUZZLE_FINISH
 };
 
 typedef struct
@@ -29,7 +28,7 @@ typedef struct
 typedef struct
 {
     cv::Mat img;
-    double xyz;
+    std::array<double, 3> xyz;
     bool linked;
 }specimen;
 
@@ -48,15 +47,17 @@ enum PieceState
     CATCH,
     GO_PUT,
     PUT,
-    FINISH
-}
+    PIECE_FINISH
+};
 
 class PlanModel
 {
 public:
-    PlanModel(const YAML::Node& plan);
+    PlanModel();
     ~PlanModel();
 
+    //load data
+    void init(const YAML::Node& plan);
     void run(SenseData* senseData, PlanData* palnData, ActData* actData);
     bool is_finish();
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "PlanModel.h"
 #include "img_process.h"
-#include "rgb_cf.h"
+#include "cf.h"
 
 using namespace std;
 using namespace cv;
@@ -31,8 +31,8 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
 {
     //coordinate transform
     cameraCoord2armCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], 1000);
-    relaCoord2absoCoord(senseData->rs_xyz[0], senseData->rs_xyz, actData->currentPos);
-    
+    relaCoord2absoCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], actData->currentPos);
+
     //extract interesting region of mat
     Mat ws_rgb(senseData->rs_rgb[0], roi);
     Mat ws_xyz(senseData->rs_xyz[0], roi);
@@ -41,7 +41,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
     //set threshold for depth image
     Mat ws_gray_depth, ws_thresh_depth;
     cvtColor(ws_depth, ws_gray_depth, COLOR_BGR2GRAY);
-    threshold(ws_gray_depth, ws_thresh_depth, thres, THRESH_BINARY);
+    threshold(ws_gray_depth, ws_thresh_depth, thres, 255, THRESH_BINARY);
 
     //find all contours
     vector<vector<Point> > contours;
@@ -53,8 +53,8 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
     {
         RotatedRect roRect( minAreaRect(contours[i]) );
         Rect boundRect( roRect.boundingRect() );
-        double x = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.br.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x);
-        double y = senseData->ws_xyz[0].at<Vec3f>(boundRect.tl.y, boundRect.tl.x) - senseData->ws_xyz[0].at<Vec3f>(boundRect.br.y, boundRect.tl.x);
+        double x = ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.br().x)[0] - ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.tl().x)[0];
+        double y = ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.tl().x)[1] - ws_xyz.at<Vec3f>(boundRect.br().y, boundRect.tl().x)[1];
         double area = abs(x) * abs(y);
         if(900 < area && area < 3500)//unit: mm
         {
@@ -85,7 +85,7 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
             puzzle.xyz[0] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[0];
             puzzle.xyz[1] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[1];
             puzzle.xyz[2] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[2];
-            puzzle.state = 0;
+            puzzle.state = WAIT;
 
             fragments.push_back(puzzle);
         }
@@ -101,12 +101,12 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
     surf_cf.init(samples);
     for(size_t i = 0; i < fragments.size(); i++)
     {
-        vector<similarity_list> list;
-        list = surf_cf.classify(fragments[i].img);
-        if(list[1].similarity > 2)
+        vector<cls_info> list;
+        list = surf_cf.classify(fragments[i].img, 5);
+        if(list[0].sl > 30)
             fragments[i].cls = list[0].cls;
         else
-            fragments[i].cls = list[1].cls;
+            fragments[i].cls = list[list.size()-1].cls;
     }
 
     //angle
@@ -202,7 +202,7 @@ void PlanModel::state_piece(SenseData* senseData, PlanData* planData, ActData* a
             piece_put(senseData, planData, actData);
             break;
 
-        case FINISH:
+        case PIECE_FINISH:
             cout << "piece finish" << endl;
 
             piece_finish(senseData, planData, actData);
