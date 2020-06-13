@@ -7,7 +7,7 @@ using namespace cv::xfeatures2d;
 Surf_CF::Surf_CF()
 {
     cout << "Surf_CF()" << endl;
-    detector = SURF::create( 800 );
+    detector = SURF::create( 400 );
     matcher = DescriptorMatcher::create(DescriptorMatcher::BRUTEFORCE);
 }
 
@@ -44,18 +44,25 @@ vector<cls_info> Surf_CF::classify(Mat img, int accuracy)
     //match key point
     for(size_t i = 0; i < matches.size(); i++)
     {
-        matcher->match( sam_descriptors[i], img_descriptors, matches[i] );
-        matches_sort(&matches[i]);
-
-        //according accuracy to decide how many matched key point is going to use
-        list[i].cls = (int)i;
-        list[i].sl = 0;
-        if(matches[i].size() >= accuracy)
-            for(size_t j = 0; j < accuracy; j++)
-                list[i].sl += 1 / matches[i][j].distance;
-        else
-            for(size_t j = 0; j < matches[i].size(); j++)
-                list[i].sl += 1 / matches[i][j].distance;
+        if(sam_key_points[i].size() != 0 && img_key_points.size() != 0) {
+            matcher->match( sam_descriptors[i], img_descriptors, matches[i] );
+            matches_sort(&matches[i]);
+            
+            //according accuracy to decide how many matched key point is going to use
+            list[i].cls = (int)i;
+            list[i].sl = 0;
+            if(matches[i].size() >= accuracy)
+                for(size_t j = 0; j < accuracy; j++)
+                    list[i].sl += 1 / matches[i][j].distance;
+                else {
+                    cout << "accuracy isn't enough" << endl;
+                    for(size_t j = 0; j < matches[i].size(); j++)
+                        list[i].sl += 1 / matches[i][j].distance;
+                }
+        }
+        else {
+            cout << "image hasn't keypoint: " << i << endl;
+        }
     }
 
     class_info_sort(&list, DESCENDING);

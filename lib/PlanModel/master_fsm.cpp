@@ -2,6 +2,7 @@
 #include "PlanModel.h"
 #include "img_process.h"
 #include "cf.h"
+#include "hist.h"
 
 using namespace std;
 using namespace cv;
@@ -31,12 +32,14 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
 {
     //coordinate transform
     cameraCoord2armCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], 1000);
-    relaCoord2absoCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], actData->currentPos);
+    //relaCoord2absoCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], actData->currentPos);
 
     //extract interesting region of mat
     Mat ws_rgb(senseData->rs_rgb[0], roi);
     Mat ws_xyz(senseData->rs_xyz[0], roi);
     Mat ws_depth(senseData->rs_depth[0], roi);
+
+    cout << "roi extraction" << endl;
 
     //set threshold for depth image
     Mat ws_gray_depth, ws_thresh_depth;
@@ -56,10 +59,10 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         double x = ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.br().x)[0] - ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.tl().x)[0];
         double y = ws_xyz.at<Vec3f>(boundRect.tl().y, boundRect.tl().x)[1] - ws_xyz.at<Vec3f>(boundRect.br().y, boundRect.tl().x)[1];
         double area = abs(x) * abs(y);
-        if(900 < area && area < 3500)//unit: mm
+        if(2000 < area && area < 9000)//unit: mm
         {
             fragment puzzle;
-            
+
             //produce mask
             Mat and_img, rotate_img;
             Mat mask = Mat::zeros(ws_depth.size(), CV_8U);
@@ -74,16 +77,24 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
             }
             roVertices.push_back(roVertice);
             drawContours( mask, roVertices, 0, 255, -1);
+
+//             imshow("mask", mask);
+//             waitKey();
+            
             bitwise_and(Mat(ws_rgb, boundRect), Mat(ws_rgb, boundRect), and_img, Mat(mask, boundRect));
             rotateImageInboundRect(and_img, rotate_img, roRect.angle, Scalar(0, 0, 0));
 
+//             imshow("rotate image", rotate_img);
+//             waitKey();
+            
             //enter information
             rotate_img.copyTo(puzzle.img);
             puzzle.angle = -roRect.angle;
             puzzle.center[0] = roRect.center.x;
             puzzle.center[1] = roRect.center.y;
-            puzzle.xyz[0] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[0];
-            puzzle.xyz[1] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[1];
+            
+            puzzle.xyz[0] = senseData->rs_xyz[0].at<Vec3f>(roRect.center.y + roi.tl().y, roRect.center.x +  + roi.tl().x)[0] - senseData->rs_xyz[0].at<Vec3f>(senseData->rs_xyz[0].rows / 2, senseData->rs_xyz[0].cols / 2)[0];
+            puzzle.xyz[1] = senseData->rs_xyz[0].at<Vec3f>(roRect.center.y + roi.tl().y, roRect.center.x +  + roi.tl().x)[0] - senseData->rs_xyz[0].at<Vec3f>(senseData->rs_xyz[0].rows / 2, senseData->rs_xyz[0].cols / 2)[1];
             puzzle.xyz[2] = ws_xyz.at<Vec3f>(roRect.center.y, roRect.center.x)[2];
             puzzle.state = WAIT;
 
@@ -91,7 +102,12 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
         }
     }
 
-    //histogram
+    cout << "fragment size: " << fragments.size() << endl;
+    if(fragments.size() != 17) {
+        fragments.resize(17);
+    }
+    
+    //classification
     vector<Mat> samples(sample.size());
     for(size_t i = 0; i < sample.size(); i++)
     {
@@ -102,13 +118,15 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
     for(size_t i = 0; i < fragments.size(); i++)
     {
         vector<cls_info> list;
-        list = surf_cf.classify(fragments[i].img, 5);
+        list = surf_cf.classify(fragments[i].img, 10);
         if(list[0].sl > 30)
             fragments[i].cls = list[0].cls;
         else
-            fragments[i].cls = list[list.size()-1].cls;
+            fragments[i].cls = list.back().cls;
     }
 
+    cout << "angle recognition" << endl;
+    
     //angle
     for(size_t i = 0; i < fragments.size(); i++)
     {
@@ -161,11 +179,26 @@ void PlanModel::state_identify(SenseData* senseData, PlanData* planData, ActData
             fragments[i].angle -= 360;
     }
     
+    for(size_t i = 0; i < fragments.size(); i++) {
+        imshow("puzzle img", fragments[i].img);
+        cout << i << " class: " << fragments[i].cls << ", angle: " << fragments[i].angle << endl;
+        cout << fragments[i].xyz[0] << " " << fragments[i].xyz[1] << " " << fragments[i].xyz[2] << endl;
+        HIST hist;
+        hist.load_image(fragments[i].img);
+        Mat imgHist;
+        hist.get_histImage(imgHist);
+        imshow("hist", imgHist);
+        waitKey();
+    }
+    destroyWindow("puzzle img");
+    destroyWindow("hist");
+    
     //act
     planData->action.clear();
 
     //state switch
-    switchMaster(MasterState::PIECE);
+//     switchMaster(MasterState::PIECE);
+    switchMaster(MasterState::FINISH);
 }
 
 void PlanModel::state_piece(SenseData* senseData, PlanData* planData, ActData* actData)
@@ -224,6 +257,7 @@ void PlanModel::state_finish(SenseData* senseData, PlanData* planData, ActData* 
     go_home.arm.value = {0, 0, 0, 0, -90, 0};
 
     //sucker
+    go_home.sucker.resize(1);
     go_home.sucker[0].sw = 0;
 
     planData->action.clear();

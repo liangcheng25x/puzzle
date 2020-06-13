@@ -40,13 +40,11 @@ set(DEPS_PATHS
 # Library paths
 set(LIB_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/hist
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/rgb_color_adjust
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/SPAData
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/SenseModel
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/PlanModel
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/ActModel
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/yaml
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/fm_clustering
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/img_process
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/cf
     )

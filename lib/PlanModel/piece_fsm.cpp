@@ -35,7 +35,7 @@ void PlanModel::piece_trace(SenseData* senseData, PlanData* planData, ActData* a
     trace.arm.moveType = HiwinSDK::MoveType::Relative;
     trace.arm.ctrlType = HiwinSDK::CtrlType::Linear;
     trace.arm.feedRate = 10;
-    trace.arm.value = {fragments.back().xyz[0] - actData->currentPos[0], fragments.back().xyz[1] - actData->currentPos[1], (fragments.back().xyz[2] - actData->currentPos[2] - sucker_coord[0][2]) / 2, 0, 0, 0};
+    trace.arm.value = {fragments.back().xyz[0] - actData->currentPos[0], fragments.back().xyz[1] - actData->currentPos[1], fragments.back().xyz[2] - actData->currentPos[2] - sucker_coord[0][2] + 300, 0, 0, 0};
 
     //sucker
     trace.sucker[0].sw = 0;

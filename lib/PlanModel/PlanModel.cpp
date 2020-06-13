@@ -28,19 +28,20 @@ void PlanModel::init(const YAML::Node& plan)
 {
     //work
     work_posture = plan["work posture"].as<vector<double>>();
-    roi = Rect(Point( plan["work space"]["x"].as<int>(), plan["work space"]["y"].as<int>() ), Size( plan["work space"]["w"].as<int>(), plan["work space"]["h"].as<int>() ));
+    roi = plan["workspace"].as<Rect>();
 
     //coordinate
     sucker_coord = plan["sucker_coord"].as< vector< array<double, 3> > >();
 
     //puzzle sample
     fragments.clear();
-    
+
     sample.clear();
     for(size_t i = 0; i < plan["sample"].size(); i++)
     {
         specimen s;
         s.img = plan["sample"][i].as<Mat>();
+        s.xyz = plan["target location"][i].as<array<double, 3>>();
         sample.push_back(s);
     }
 

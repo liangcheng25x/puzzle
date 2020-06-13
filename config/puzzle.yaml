@@ -1,39 +1,55 @@
-sensePara:
+sense:
     rs:
-        -   id: "0"
+        -   id: 0
             width: 1280
             height: 720
+    zed: ~
 
-planPara:
+plan:
     work posture: [0, 0, 0, 0, 0, 0]
-    work space: 
-        x: 120
-        y: 0
-        w: 1080
-        h: 720
-    threshold: 50
+    workspace: {x: 0, y: 0, w: 1280, h: 720}
+    threshold: 191
     sample:
-        - puzzle_model/0.jpeg
-        - puzzle_model/1.jpeg
-        - puzzle_model/2.jpeg
-        - puzzle_model/3.jpeg
-        - puzzle_model/4.jpeg
-        - puzzle_model/5.jpeg
-        - puzzle_model/6.jpeg
-        - puzzle_model/7.jpeg
-        - puzzle_model/8.jpeg
-        - puzzle_model/9.jpeg
-        - puzzle_model/10.jpeg
-        - puzzle_model/11.jpeg
-        - puzzle_model/12.jpeg
-        - puzzle_model/13.jpeg
-        - puzzle_model/14.jpeg
-        - puzzle_model/15.jpeg
-        - puzzle_model/16.jpeg
+        - puzzle_model/_0.bmp
+        - puzzle_model/_1.bmp
+        - puzzle_model/_2.bmp
+        - puzzle_model/_3.bmp
+        - puzzle_model/_4.bmp
+        - puzzle_model/_5.bmp
+        - puzzle_model/_6.bmp
+        - puzzle_model/_7.bmp
+        - puzzle_model/_8.bmp
+        - puzzle_model/_9.bmp
+        - puzzle_model/_10.bmp
+        - puzzle_model/_11.bmp
+        - puzzle_model/_12.bmp
+        - puzzle_model/_13.bmp
+        - puzzle_model/_14.bmp
+        - puzzle_model/_15.bmp
+        - puzzle_model/_16.bmp
     sucker_coord: 
         - [-42, 62.7, 99]
+    target location:
+        - [490,368,3.5]
+        - [435,368,3.5]
+        - [380,368,3.5]
+        - [325,368,3.5]
+        - [270,368,3.5]
+        - [215,368,3.5]
+        - [490,423,3.5]
+        - [435,423,3.5]
+        - [380,423,3.5]
+        - [325,423,3.5]
+        - [270,423,3.5]
+        - [215,423,3.5]
+        - [490,478,3.5]
+        - [435,478,3.5]
+        - [380,478,3.5]
+        - [325,478,3.5]
+        - [270,478,3.5]
+        
 
-actPara:
+act:
     arm: 
         ip: "192.168.0.1"
         port: 502

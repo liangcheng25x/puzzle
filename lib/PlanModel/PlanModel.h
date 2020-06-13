@@ -3,7 +3,6 @@
 
 #include "SPAData.h"
 #include "SenseModel.h"
-#include "rgb_color_adjust.h"
 #include <yaml-cpp/yaml.h>
 #define OPENCV
 #include <yolo_v2_class.hpp>

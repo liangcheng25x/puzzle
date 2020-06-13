@@ -38,7 +38,7 @@ void SenseModel::init(const YAML::Node& sense)
     {
         rs[i] = sense["rs"][i].as<RealSense>();
         rs[i].set_align_direction(RealSense::AlignDirection(2));
-        rs[i].set_colorizer_type(RealSense::ColorizerType(3));
+        rs[i].set_colorizer_type(RealSense::ColorizerType(2));
         rs[i].set_hole_switch(1);
     }
 
@@ -46,7 +46,7 @@ void SenseModel::init(const YAML::Node& sense)
     for(int i = 0; i < zedNum; i++)
     {
         zed[i].open(sense["zed"][i].as<InitParameters>());
-        
+
         YAML::Node vedio_setting = sense["zed"][i]["vedio setting"];
         zed[i].setCameraSettings(sl::VIDEO_SETTINGS::BRIGHTNESS, vedio_setting["brightness"].as<int>());
         zed[i].setCameraSettings(sl::VIDEO_SETTINGS::CONTRAST, vedio_setting["contrast"].as<int>());
