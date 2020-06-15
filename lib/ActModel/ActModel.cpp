@@ -7,13 +7,8 @@ ActModel::ActModel(const YAML::Node& act)
     cout << "act model construct" << endl;
 
     //robot
-    robot.connect(act["act"]["ip"].as<std::string>(), act["arm"]["port"].as<int>());
+    robot.connect(act["arm"]["ip"].as<std::string>(), act["arm"]["port"].as<int>());
     robot.setServoState(1);
-
-    /*robot.setActiveBaseNum(actPara.arm.baseNum);
-    robot.setCurrentBaseCoord(actPara.arm.base);
-    robot.setActiveToolNum(actPara.arm.toolNum);
-    robot.setCurrentToolCoord(actPara.arm.tool);*/
 
     robot.setOperationMode(act["arm"]["operationMode"].as<int>());
 
@@ -25,10 +20,10 @@ ActModel::ActModel(const YAML::Node& act)
     //sucker
     s_controller = new Serial_Controller(act["serial controller"]["port"].as<string>());
 
-    sucker_pin.clear();
-    for(size_t i = 0; i < act["serial controller"]["sucker"].size(); i++)
+    sucker_pin = act["serial controller"]["sucker"].as<vector<int>>();
+
+    for(size_t i = 0; i < sucker_pin.size(); i++)
     {
-        sucker_pin.push_back(act["serial controller"]["sucker"][i].as<int>());
         s_controller->close(sucker_pin[i]);
     }
 }

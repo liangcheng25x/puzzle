@@ -7,3 +7,7 @@ file(GLOB CONFIG_SRCS
 install(FILES ${CONFIG_SRCS}
         DESTINATION bin
         )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/puzzle_model
+        DESTINATION bin
+        )

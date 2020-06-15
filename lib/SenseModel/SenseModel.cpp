@@ -102,23 +102,6 @@ void SenseModel::run()
     }
 }
 
-/*void SenseModel::drawImgs(PlanData planData)
-{
-    for(unsigned int i = 0; i < planData.drawRect.size(); i++)
-    {
-        Rect rect = planData.drawRect[i].bboxs;
-        Scalar color = planData.drawRect[i].bboxColors;
-        string msg = planData.drawRect[i].bboxMsgs;
-        int camid = planData.drawRect[i].cam;
-        
-        rectangle(rgb[camid], rect, color, 2);
-        putText(rgb[camid], msg, rect.tl(), 0, 1, color, 2);
-        
-        rectangle(v_depth[camid], rect, color, 2);
-        putText(v_depth[camid], msg, rect.tl(), 0, 1, color, 2);
-    }
-}*/
-
 void SenseModel::showImgs()
 {
     for(int i = 0; i < rsNum; i++)

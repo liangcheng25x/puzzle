@@ -93,21 +93,3 @@ vector<cls_info> RGB_CF::classify(cv::Mat img)
 
     return list;
 }
-
-// void RGB_CF::similarity_list_sort()
-// {
-//     similarity_list tmp;
-//     
-//     for(size_t i = list.size() - 1; i > 0; i--)
-//     {
-//         for(size_t j = 0; j <= i - 1; j++)
-//         {
-//             if( list[j].similarity < list[j+1].similarity)
-//             {
-//                 tmp = list[j];
-//                 list[j] = list[j+1];
-//                 list[j+1] = tmp;
-//             }
-//         }
-//     }
-// }

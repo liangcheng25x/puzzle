@@ -39,7 +39,8 @@ vector<cls_info> Surf_CF::classify(Mat img, int accuracy)
     Mat img_descriptors;
 
     //detect key point of key point
-    detector->detectAndCompute( img, noArray(), img_key_points, img_descriptors );
+    if(!img.empty())
+        detector->detectAndCompute( img, noArray(), img_key_points, img_descriptors );
 
     //match key point
     for(size_t i = 0; i < matches.size(); i++)
@@ -51,17 +52,14 @@ vector<cls_info> Surf_CF::classify(Mat img, int accuracy)
             //according accuracy to decide how many matched key point is going to use
             list[i].cls = (int)i;
             list[i].sl = 0;
-            if(matches[i].size() >= accuracy)
+            if(matches[i].size() >= accuracy) {
                 for(size_t j = 0; j < accuracy; j++)
                     list[i].sl += 1 / matches[i][j].distance;
-                else {
-                    cout << "accuracy isn't enough" << endl;
-                    for(size_t j = 0; j < matches[i].size(); j++)
-                        list[i].sl += 1 / matches[i][j].distance;
-                }
-        }
-        else {
-            cout << "image hasn't keypoint: " << i << endl;
+            }
+            else {
+                for(size_t j = 0; j < matches[i].size(); j++)
+                    list[i].sl += 1 / matches[i][j].distance;
+            }
         }
     }
 

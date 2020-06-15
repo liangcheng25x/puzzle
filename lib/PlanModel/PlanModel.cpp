@@ -3,6 +3,7 @@
 #include "SPAData.h"
 #include "SenseModel.h"
 #include "PlanModel.h"
+#include "img_process.h"
 #define OPENCV
 #include <yolo_v2_class.hpp>
 #include "yaml.h"
@@ -33,9 +34,6 @@ void PlanModel::init(const YAML::Node& plan)
     //coordinate
     sucker_coord = plan["sucker_coord"].as< vector< array<double, 3> > >();
 
-    //puzzle sample
-    fragments.clear();
-
     sample.clear();
     for(size_t i = 0; i < plan["sample"].size(); i++)
     {
@@ -51,6 +49,8 @@ void PlanModel::init(const YAML::Node& plan)
 
 void PlanModel::run(SenseData* senseData, PlanData* planData, ActData* actData)
 {
+    cameraCoord2armCoord(senseData->rs_xyz[0], senseData->rs_xyz[0], 1000);
+    
     switch(master)
     {
         case MasterState::INIT:

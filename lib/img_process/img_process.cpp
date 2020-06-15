@@ -8,12 +8,6 @@ void rotateImageInboundRect(Mat& img, Mat& dst, double degree, Scalar color)
         degree = -44.9;
     float angle = degree * CV_PI / 180;
     double a = sin(-angle), b = cos(-angle);
-//     int rotate_width = img.rows * fabs(a) + img.cols * fabs(b);
-//     int rotate_height = img.cols * fabs(a) + img.rows * fabs(b);
-
-//     double cos_sin = pow(b, 2) - pow(a, 2);
-//     if(cos_sin == 0)
-//         cos_sin = 2;
     int rotate_width = (img.cols * b - img.rows * a) / (pow(b, 2) - pow(a, 2));
     int rotate_height = (img.rows * b - img.cols * a) / (pow(b, 2) - pow(a, 2));
 
